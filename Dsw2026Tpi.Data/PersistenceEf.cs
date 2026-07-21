@@ -34,22 +34,30 @@ public class PersistenceEf: IPersistence
 
     public async Task<T?> First<T>(Expression<Func<T, bool>> predicate, params string[] include) where T : EntityBase
     {
-        return await Include(_context.Set<T>(), include).FirstOrDefaultAsync(predicate);
+        return await Include(_context.Set<T>(), include)
+     .Where(e => !e.IsDeleted)
+     .FirstOrDefaultAsync(predicate);
     }
 
     public async Task<IEnumerable<T>?> GetAll<T>(params string[] include) where T : EntityBase
     {
-        return await Include(_context.Set<T>(), include).ToListAsync();
+        return await Include(_context.Set<T>(), include)
+     .Where(e => !e.IsDeleted)
+     .ToListAsync();
     }
 
     public async Task<T?> GetById<T>(Guid id, params string[] include) where T : EntityBase
     {
-        return await Include(_context.Set<T>(), include).FirstOrDefaultAsync(e => e.Id == id);
+        return await Include(_context.Set<T>(), include)
+      .FirstOrDefaultAsync(e => e.Id == id && !e.IsDeleted);
     }
 
     public async Task<IEnumerable<T>?> GetFiltered<T>(Expression<Func<T, bool>> predicate, params string[] include) where T : EntityBase
     {
-        return await Include(_context.Set<T>(), include).Where(predicate).ToListAsync();
+        return await Include(_context.Set<T>(), include)
+     .Where(e => !e.IsDeleted)
+     .Where(predicate)
+     .ToListAsync();
     }
 
     public async Task<T> Update<T>(T entity) where T : EntityBase
@@ -65,8 +73,9 @@ public class PersistenceEf: IPersistence
         pageIndex = Math.Abs(pageIndex) == 0 ? 0 : Math.Abs(pageIndex) - 1;
 
         var filtered = Include(_context.Set<T>(), includes)
-                 .Where(predicate)
-                 .OrderBy(sortOrder);
+          .Where(e => !e.IsDeleted)
+          .Where(predicate)
+          .OrderBy(sortOrder);
 
         var total = await filtered.CountAsync();
 
