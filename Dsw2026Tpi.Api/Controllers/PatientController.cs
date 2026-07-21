@@ -1,22 +1,42 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Dsw2026Tpi.Application.Interfaces;
+using Dsw2026Tpi.CrossCutting.Identity;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
-namespace Dsw2026Tpi.Api.Controllers
+namespace Dsw2026Tpi.Api.Controllers;
+
+[Route("patients")]
+[Authorize(Policy = Policies.AdminPolicy)]
+public class PatientController : AppController
 {
-    public class PatientController
+    private readonly IPatientService _service;
+
+    public PatientController(IPatientService service)
     {
-        [HttpGet]
-        public IActionResult GetAll()
+        _service = service;
+    }
 
-[HttpGet("{id}")]
-        public IActionResult GetById(Guid id)
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int pageSize,
+        [FromQuery] int pageIndex,
+        [FromQuery] string? name = null)
+    {
+        var patients = await _service.GetAll(pageSize, pageIndex, name);
+        return Ok(patients);
+    }
 
-[HttpPost]
-        public IActionResult Create(...)
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var patient = await _service.GetById(id);
 
-[HttpPut("{id}")]
-        public IActionResult Update(...)
+        if (patient == null)
+            return NotFound();
 
-[HttpDelete("{id}")]
-        public IActionResult Delete(Guid id)
+        return Ok(patient);
     }
 }
