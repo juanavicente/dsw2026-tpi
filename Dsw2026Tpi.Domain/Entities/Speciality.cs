@@ -13,6 +13,9 @@ public class Speciality: EntityBase
 
     public Speciality(string name, string description, Guid? id = null) : base(id)
     {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("The speciality name is required.", nameof(name));
+
         Name = name;
         Description = description;
     }
