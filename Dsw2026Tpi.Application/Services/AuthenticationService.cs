@@ -7,6 +7,8 @@ using Dsw2026Tpi.CrossCutting.Resources;
 using Dsw2026Tpi.Data.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
+using Dsw2026Tpi.Domain.Interfaces;
+using Dsw2026Tpi.Domain.Entities;
 
 namespace Dsw2026Tpi.Application.Services;
 
@@ -16,19 +18,24 @@ public class AuthenticationService : IAuthenticationService
     private readonly ISignInService _signInManager;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly JwtService _jwtService;
+    private readonly IPersistence _persistence;
     private readonly ILogger<AuthenticationService> _logger;
 
-    public AuthenticationService(UserManager<ApplicationUser> userManager,
+    public AuthenticationService(
+        UserManager<ApplicationUser> userManager,
         ISignInService signInManager,
         RoleManager<IdentityRole> roleManager,
         JwtService jwtService,
+        IPersistence persistence,
         ILogger<AuthenticationService> logger)
+
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _roleManager = roleManager;
         _jwtService = jwtService;
         _logger = logger;
+        _persistence = persistence;
     }
 
     public async Task<LoginAdminModel.Response> LoginAdmin(LoginAdminModel.Request request)
