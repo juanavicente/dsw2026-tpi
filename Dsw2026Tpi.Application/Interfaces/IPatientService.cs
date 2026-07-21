@@ -10,12 +10,4 @@ namespace Dsw2026Tpi.Application.Interfaces;
 public interface IPatientService
 {
     Task<Pagination<PatientModel.Response>> GetAll(int pageSize, int pageIndex);
-
-    Task<PatientModel.Response?> GetById(Guid id);
-
-    Task<PatientModel.Response> Create(PatientModel.Request request);
-
-    Task<PatientModel.Response> Update(Guid id, PatientModel.Request request);
-
-    Task Delete(Guid id);
 }
