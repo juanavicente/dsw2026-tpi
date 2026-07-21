@@ -1,10 +1,21 @@
-﻿using System;
+﻿using Dsw2026Tpi.Application.Dtos;
+using Dsw2026Tpi.Application.Dtos.Patient;
+using Dsw2026Tpi.Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Dsw2026Tpi.Application.Interfaces
+namespace Dsw2026Tpi.Application.Interfaces;
+
+public interface IPatientService
 {
-    internal class IPatientService
-    {
-    }
+    Task<Pagination<PatientModel.Response>> GetAll(int pageSize, int pageIndex);
+
+    Task<PatientModel.Response?> GetById(Guid id);
+
+    Task<PatientModel.Response> Create(PatientModel.Request request);
+
+    Task<PatientModel.Response> Update(Guid id, PatientModel.Request request);
+
+    Task Delete(Guid id);
 }
