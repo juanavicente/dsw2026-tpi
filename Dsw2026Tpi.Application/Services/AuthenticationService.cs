@@ -7,6 +7,7 @@ using Dsw2026Tpi.CrossCutting.Resources;
 using Dsw2026Tpi.Data.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 namespace Dsw2026Tpi.Application.Services;
 
@@ -43,7 +44,8 @@ public class AuthenticationService : IAuthenticationService
             throw new AuthenticationException();
         }
 
-        var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
+        //var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
+        var role = Roles.Administrator;
 
         var token  = _jwtService.GenerateToken(user.UserName!, role);
 
@@ -53,7 +55,7 @@ public class AuthenticationService : IAuthenticationService
         );
     }
 
-    public async Task<LoginPatientModel.Response> LoginPatient(LoginPatientModel.Response request)
+    public async Task<LoginPatientModel.Response> LoginPatient(LoginPatientModel.Request request)
     {
         throw new NotImplementedException();
     }
@@ -71,16 +73,43 @@ public class AuthenticationService : IAuthenticationService
             UpdatedAt = DateTime.UtcNow
         };
 
-        var result = await _userManager.CreateAsync(user, request.Password);
+        //var result = await _userManager.CreateAsync(user, request.Password);
 
-        if (!result.Succeeded) throw new ConflictException(nameof(ErrorCodes.REGISTER_USER_CONFLICT),
-            ErrorCodes.REGISTER_USER_CONFLICT)
-                .WithDetail(result.Errors.Select(e => (e.Code, e.Description)));
-       
-        _ = await _userManager.AddToRoleAsync(user, Roles.Administrator);
+        //if (!result.Succeeded) throw new ConflictException(nameof(ErrorCodes.REGISTER_USER_CONFLICT),
+        //ErrorCodes.REGISTER_USER_CONFLICT)
+        //.WithDetail(result.Errors.Select(e => (e.Code, e.Description)));
+        try
+        {
+            var result = await _userManager.CreateAsync(user, request.Password);
 
-        _logger.LogInformation("Usuario registrado: {Email}", request.Email);
 
-        return new RegisterModel.Response(request.Email);
+            if (!result.Succeeded)
+            {
+                var errores = string.Join("\n", result.Errors.Select(e =>
+                    $"{e.Code} - {e.Description}"));
+
+                throw new Exception(errores);
+            }
+
+            var roles = await _roleManager.Roles.ToListAsync();
+
+            Console.WriteLine("Cantidad de roles: " + roles.Count);
+
+            Console.WriteLine("ROLES:");
+
+            foreach (var r in roles)
+            {
+                Console.WriteLine($"{r.Id} - {r.Name}");
+            }
+
+           // _ = await _userManager.AddToRoleAsync(user, Roles.Administrator);
+
+            _logger.LogInformation("Usuario registrado: {Email}", request.Email);
+
+            return new RegisterModel.Response(request.Email);
+        }
+        catch (Exception ex) { Console.WriteLine(ex.ToString());
+            throw;
+        }
     }
 }
