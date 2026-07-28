@@ -52,18 +52,62 @@ public class PatientService : IPatientService
             patient.Phone);
     }
 
-    public Task<PatientModel.Response> Create(PatientModel.Request request)
+    public async Task<Patient> Create(PatientModel.Request request)
     {
-        throw new NotImplementedException();
+        var patient = new Patient(
+            request.Name,
+            request.Dni,
+            request.Email,
+            request.Phone);
+
+        await _persistence.Add(patient);
+
+        return patient;
     }
 
-    public Task<PatientModel.Response> Update(Guid id, PatientModel.Request request)
+    public async Task<PatientModel.Response> Update(Guid id, PatientModel.Request request)
     {
-        throw new NotImplementedException();
+        var patient = await _persistence.GetById<Patient>(id);
+
+        if (patient == null)
+            throw new ArgumentException("El paciente no existe.");
+
+        var duplicatedDni = await _persistence.First<Patient>(
+            p => p.Dni == request.Dni && p.Id != id);
+
+        if (duplicatedDni != null)
+            throw new ArgumentException("Ya existe un paciente con ese DNI.");
+
+        var duplicatedEmail = await _persistence.First<Patient>(
+            p => p.Email.ToLower() == request.Email.Trim().ToLower()
+                 && p.Id != id);
+
+        if (duplicatedEmail != null)
+            throw new ArgumentException("Ya existe un paciente con ese email.");
+
+        patient.Update(
+            request.Name,
+            request.Dni,
+            request.Email,
+            request.Phone);
+
+        await _persistence.Update(patient);
+
+        return new PatientModel.Response(
+            patient.Id,
+            patient.Name,
+            patient.Dni,
+            patient.Email,
+            patient.Phone);
     }
 
-    public Task Delete(Guid id)
+    public async Task Delete(Guid id)
     {
-        throw new NotImplementedException();
+        var patient = await _persistence.GetById<Patient>(id);
+
+        if (patient == null)
+            throw new ArgumentException("El paciente no existe.");
+
+        await _persistence.Delete(patient);
     }
 }

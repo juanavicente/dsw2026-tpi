@@ -18,7 +18,6 @@ public class AuthenticationService : IAuthenticationService
     private readonly ISignInService _signInManager;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly JwtService _jwtService;
-    private readonly IPersistence _persistence;
     private readonly ILogger<AuthenticationService> _logger;
 
     public AuthenticationService(
@@ -26,7 +25,6 @@ public class AuthenticationService : IAuthenticationService
         ISignInService signInManager,
         RoleManager<IdentityRole> roleManager,
         JwtService jwtService,
-        IPersistence persistence,
         ILogger<AuthenticationService> logger)
 
     {
@@ -35,7 +33,6 @@ public class AuthenticationService : IAuthenticationService
         _roleManager = roleManager;
         _jwtService = jwtService;
         _logger = logger;
-        _persistence = persistence;
     }
 
     public async Task<LoginAdminModel.Response> LoginAdmin(LoginAdminModel.Request request)
@@ -59,12 +56,6 @@ public class AuthenticationService : IAuthenticationService
             role
         );
     }
-
-    public async Task<LoginPatientModel.Response> LoginPatient(LoginPatientModel.Request request)
-    {
-        throw new NotImplementedException();
-    }
-
     public async Task<RegisterModel.Response> Register(RegisterModel.Request request)
     {
         if (!request.Email.IsEmailValid()) throw new ValidationException(ErrorCodes.REGISTER_USER_INVALID,
