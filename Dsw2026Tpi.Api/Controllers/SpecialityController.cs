@@ -1,4 +1,5 @@
-﻿using Dsw2026Tpi.Application.Interfaces;
+﻿using Dsw2026Tpi.Application.Dtos;
+using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -38,5 +39,38 @@ public class SpecialityController : AppController
             return NotFound();
 
         return Ok(speciality);
+    }
+
+    [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    public async Task<IActionResult> Create(
+        [FromBody] SpecialityModel.Request request)
+    {
+        var speciality = await _service.Create(request);
+
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = speciality.Id },
+            speciality);
+    }
+
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Update(
+        Guid id,
+        [FromBody] SpecialityModel.Request request)
+    {
+        var speciality = await _service.Update(id, request);
+
+        return Ok(speciality);
+    }
+
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        await _service.Delete(id);
+
+        return NoContent();
     }
 }
