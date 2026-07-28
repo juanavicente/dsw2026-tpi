@@ -53,7 +53,7 @@ public class AuthenticationService : IAuthenticationService
         );
     }
 
-    public async Task<LoginPatientModel.Response> LoginPatient(LoginPatientModel.Response request)
+    public async Task<LoginPatientModel.Response> LoginPatient(LoginPatientModel.Request request)
     {
         throw new NotImplementedException();
     }
@@ -71,16 +71,32 @@ public class AuthenticationService : IAuthenticationService
             UpdatedAt = DateTime.UtcNow
         };
 
-        var result = await _userManager.CreateAsync(user, request.Password);
+        //var result = await _userManager.CreateAsync(user, request.Password);
 
-        if (!result.Succeeded) throw new ConflictException(nameof(ErrorCodes.REGISTER_USER_CONFLICT),
-            ErrorCodes.REGISTER_USER_CONFLICT)
-                .WithDetail(result.Errors.Select(e => (e.Code, e.Description)));
-       
-        _ = await _userManager.AddToRoleAsync(user, Roles.Administrator);
+        //if (!result.Succeeded) throw new ConflictException(nameof(ErrorCodes.REGISTER_USER_CONFLICT),
+        //ErrorCodes.REGISTER_USER_CONFLICT)
+        //.WithDetail(result.Errors.Select(e => (e.Code, e.Description)));
+        try
+        {
+            var result = await _userManager.CreateAsync(user, request.Password);
 
-        _logger.LogInformation("Usuario registrado: {Email}", request.Email);
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                {
+                    Console.WriteLine($"{error.Code} - {error.Description}");
+                }
 
-        return new RegisterModel.Response(request.Email);
+                throw new Exception("ERROR_REGISTER");
+            }
+            _ = await _userManager.AddToRoleAsync(user, Roles.Administrator);
+
+            _logger.LogInformation("Usuario registrado: {Email}", request.Email);
+
+            return new RegisterModel.Response(request.Email);
+        }
+        catch (Exception ex) { Console.WriteLine(ex.ToString());
+            throw;
+        }
     }
 }
