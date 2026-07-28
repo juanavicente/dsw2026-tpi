@@ -7,6 +7,7 @@ using Dsw2026Tpi.CrossCutting.Resources;
 using Dsw2026Tpi.Data.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 namespace Dsw2026Tpi.Application.Services;
 
@@ -43,7 +44,8 @@ public class AuthenticationService : IAuthenticationService
             throw new AuthenticationException();
         }
 
-        var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
+        //var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
+        var role = Roles.Administrator;
 
         var token  = _jwtService.GenerateToken(user.UserName!, role);
 
@@ -80,16 +82,27 @@ public class AuthenticationService : IAuthenticationService
         {
             var result = await _userManager.CreateAsync(user, request.Password);
 
+
             if (!result.Succeeded)
             {
-                foreach (var error in result.Errors)
-                {
-                    Console.WriteLine($"{error.Code} - {error.Description}");
-                }
+                var errores = string.Join("\n", result.Errors.Select(e =>
+                    $"{e.Code} - {e.Description}"));
 
-                throw new Exception("ERROR_REGISTER");
+                throw new Exception(errores);
             }
-            _ = await _userManager.AddToRoleAsync(user, Roles.Administrator);
+
+            var roles = await _roleManager.Roles.ToListAsync();
+
+            Console.WriteLine("Cantidad de roles: " + roles.Count);
+
+            Console.WriteLine("ROLES:");
+
+            foreach (var r in roles)
+            {
+                Console.WriteLine($"{r.Id} - {r.Name}");
+            }
+
+           // _ = await _userManager.AddToRoleAsync(user, Roles.Administrator);
 
             _logger.LogInformation("Usuario registrado: {Email}", request.Email);
 
