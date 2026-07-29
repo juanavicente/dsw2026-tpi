@@ -1,4 +1,6 @@
-﻿namespace Dsw2026Tpi.Application.Dtos;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Dsw2026Tpi.Application.Dtos;
 
 public record LoginAdminModel
 {
@@ -8,6 +10,15 @@ public record LoginAdminModel
 
 public record LoginPatientModel
 {
-    public record Request(string Email, long Dni);
+    public record Request(
+
+        [Required]
+        [EmailAddress]
+        string Email,
+
+        [Required]
+        long Dni
+    );
+
     public record Response(string? Token, string? Role);
 }
