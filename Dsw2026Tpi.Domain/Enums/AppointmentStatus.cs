@@ -2,16 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Dsw2026Tpi.Domain.Enums
+namespace Dsw2026Tpi.Domain.Enums;
+
+public enum AppointmentStatus
 {
-    public enum AppointmentStatus
-
-    {
-
-        Confirmed,
-
-        Cancelled,
-
-        Completed
-    }
+    Confirmed,
+    Cancelled,
+    Completed
 }
