@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Dsw2026Tpi.Application.Dtos;
+﻿namespace Dsw2026Tpi.Application.Dtos;
 
 public record AppointmentModel
 {
@@ -10,8 +6,7 @@ public record AppointmentModel
         long Dni);
 
     public record Request(
-        Guid DoctorId,
-        Guid AvailabilityId,
+        Guid TurnId,
         PatientRequest Patient,
         string Reason);
 
@@ -22,5 +17,25 @@ public record AppointmentModel
         Guid TurnId,
         Guid PatientId,
         string Reason,
+        string Status);
+
+    public record PatientResponse(
+        Guid Id,
+        DateOnly AppointmentDate,
+        TimeOnly StartTime,
+        TimeOnly EndTime,
+        string Doctor,
+        string Speciality,
+        string Reason,
+        string Status);
+
+    public record SearchResponse(
+        Guid Id,
+        string Speciality,
+        string Doctor,
+        long Dni,
+        DateOnly AppointmentDate,
+        TimeOnly StartTime,
+        TimeOnly EndTime,
         string Status);
 }

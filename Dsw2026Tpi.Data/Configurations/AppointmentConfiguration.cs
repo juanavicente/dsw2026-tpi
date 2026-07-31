@@ -12,6 +12,12 @@ public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
 {
     public void Configure(EntityTypeBuilder<Appointment> builder)
     {
-        builder.ToTable("Appointments");
+        builder.HasOne(a => a.Patient)
+               .WithMany()
+               .HasForeignKey(a => a.PatientId);
+
+        builder.HasOne(a => a.Turn)
+               .WithMany()
+               .HasForeignKey(a => a.TurnId);
     }
 }

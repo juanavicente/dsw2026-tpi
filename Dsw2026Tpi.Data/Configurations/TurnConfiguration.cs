@@ -12,6 +12,8 @@ public class TurnConfiguration : IEntityTypeConfiguration<Turn>
 {
     public void Configure(EntityTypeBuilder<Turn> builder)
     {
-        builder.ToTable("Turns");
+        builder.HasOne(t => t.Availability)
+            .WithMany()
+            .HasForeignKey(t => t.AvailabilityId);
     }
 }
