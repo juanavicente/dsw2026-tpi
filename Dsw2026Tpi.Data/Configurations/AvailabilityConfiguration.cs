@@ -13,5 +13,13 @@ public class AvailabilityConfiguration : IEntityTypeConfiguration<Availability>
     public void Configure(EntityTypeBuilder<Availability> builder)
     {
         builder.ToTable("Availabilities");
+
+        builder.HasOne(a => a.Doctor)
+            .WithMany()
+            .HasForeignKey(a => a.DoctorId);
+
+        builder.HasMany(a => a.Turns)
+            .WithOne(t => t.Availability)
+            .HasForeignKey(t => t.AvailabilityId);
     }
 }
