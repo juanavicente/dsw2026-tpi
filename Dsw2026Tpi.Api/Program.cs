@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Serilog;
 using Dsw2026Tpi.CrossCutting.Identity;
 using Microsoft.AspNetCore.Identity;
+using Dsw2026Tpi.Application.Interfaces;
+using Dsw2026Tpi.Application.Services;
 
 namespace Dsw2026Tpi.Api;
 
