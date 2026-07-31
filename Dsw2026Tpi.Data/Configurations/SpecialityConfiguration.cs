@@ -19,6 +19,7 @@ public class SpecialityConfiguration : IEntityTypeConfiguration<Speciality>
             .HasMaxLength(100);
 
         builder.HasIndex(s => s.Name)
-            .IsUnique();
+            .IsUnique()
+            .HasFilter("[IsDeleted]=0");
     }
 }
