@@ -6,7 +6,7 @@ public record AppointmentModel
         long Dni);
 
     public record Request(
-        Guid TurnId,
+        Guid AvailabilitySlotId,
         PatientRequest Patient,
         string Reason);
 
@@ -14,7 +14,7 @@ public record AppointmentModel
         Guid Id,
         DateOnly AppointmentDate,
         DateOnly? CancellationDate,
-        Guid TurnId,
+        Guid AvailabilitySlotId,
         Guid PatientId,
         string Reason,
         string Status);

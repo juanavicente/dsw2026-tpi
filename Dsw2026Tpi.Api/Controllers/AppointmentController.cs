@@ -59,13 +59,12 @@ public class AppointmentController : AppController
     /// </summary>
     [HttpDelete("{id:guid}")]
     [Authorize(Policy = Policies.PatientPolicy)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Cancel(
-        Guid id)
+    public async Task<IActionResult> Cancel(Guid id)
     {
         await _service.Cancel(id);
 
-        return NoContent();
+        return Ok("ok");
     }
 }

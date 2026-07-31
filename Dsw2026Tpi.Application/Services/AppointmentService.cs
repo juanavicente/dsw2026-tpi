@@ -42,7 +42,7 @@ public class AppointmentService : IAppointmentService
                     nameof(ErrorCodes.VALIDATION_ERROR));
 
             // Buscar turno
-            var turn = await _persistence.GetById<Turn>(request.TurnId);
+            var turn = await _persistence.GetById<Turn>(request.AvailabilitySlotId);
 
             if (turn == null)
                 throw new EntityNotFoundException("Turn");
@@ -65,11 +65,15 @@ public class AppointmentService : IAppointmentService
                     "APPOINTMENT_CONFLICT",
                     "El turno seleccionado ya no se encuentra disponible.");
 
-            // No permitir fechas pasadas
-            if (turn.Date < DateOnly.FromDateTime(DateTime.UtcNow))
+            // No permitir fechas u horarios pasados
+            var appointmentDateTime = turn.Date.ToDateTime(turn.StartTime);
+
+            if (appointmentDateTime <= DateTime.UtcNow)
+            {
                 throw new ValidationException(
-                    "No es posible reservar turnos en fechas pasadas.",
+                    "No es posible reservar turnos en fechas u horarios pasados.",
                     nameof(ErrorCodes.VALIDATION_ERROR));
+            }
 
             // Buscar paciente
             var patient = await _persistence.First<Patient>(
