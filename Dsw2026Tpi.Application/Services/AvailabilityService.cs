@@ -24,6 +24,7 @@ public class AvailabilityService : IAvailabilityService
     public async Task<AvailabilityModel.Response> Create(
         AvailabilityModel.Request request)
     {
+
         try
         {
             var doctor = await _persistence.GetById<Doctor>(request.DoctorId);
@@ -72,6 +73,8 @@ public class AvailabilityService : IAvailabilityService
                 foreach (var date in dates)
                 {
                     var turns = GenerateTurns(availability, date);
+
+                    Console.WriteLine($"Fecha: {date} - Turnos generados: {turns.Count}");
 
                     await _persistence.AddRange(turns);
                 }
