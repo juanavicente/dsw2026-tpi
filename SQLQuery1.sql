@@ -1,0 +1,3 @@
+﻿SELECT Id, TurnId, Status, Reason
+FROM Appointments
+WHERE TurnId = 'D056946A-13A7-4066-B4F6-FB9E99DDFABA';
