@@ -112,29 +112,52 @@ public class AppointmentService : IAppointmentService
                 throw new EntityNotFoundException("Patient");
 
             // Verificar que no exista una reserva activa para el mismo slot
-            var appointmentExists =
-                await _persistence.First<Appointment>(
-                    a => a.TurnId == turn.Id
-                      && a.Status == AppointmentStatus.Booked);
+            Appointment? appointment = null;
 
-            if (appointmentExists != null)
-                throw new ConflictException(
-                    "APPOINTMENT_CONFLICT",
-                    "El turno ya fue reservado por otro paciente.");
+            await _persistence.ExecuteInTransaction(async () =>
+            {
+                // Volver a obtener el turno dentro de la transacción
+                var currentTurn = await _persistence.GetById<Turn>(
+                    request.AvailabilitySlotId);
 
-            // Reservar turno
-            turn.Reserve();
+                if (currentTurn == null)
+                    throw new EntityNotFoundException("Turn");
 
-            await _persistence.Update(turn);
+                // Verificar nuevamente el estado dentro de la transacción
+                if (currentTurn.Status != TurnStatus.Available)
+                    throw new ConflictException(
+                        "APPOINTMENT_CONFLICT",
+                        "El turno seleccionado ya no se encuentra disponible.");
 
-            // Crear cita
-            var appointment = new Appointment(
-                turn.Date,
-                turn.Id,
-                patient.Id,
-                request.Reason);
+                // Verificar nuevamente que no exista una reserva activa
+                var appointmentExists =
+                    await _persistence.First<Appointment>(
+                        a => a.TurnId == currentTurn.Id
+                          && a.Status == AppointmentStatus.Booked);
 
-            await _persistence.Add(appointment);
+                if (appointmentExists != null)
+                    throw new ConflictException(
+                        "APPOINTMENT_CONFLICT",
+                        "El turno ya fue reservado por otro paciente.");
+
+                // Reservar turno
+                currentTurn.Reserve();
+
+                await _persistence.Update(currentTurn);
+
+                // Crear cita
+                appointment = new Appointment(
+                    currentTurn.Date,
+                    currentTurn.Id,
+                    patient.Id,
+                    request.Reason);
+
+                await _persistence.Add(appointment);
+            });
+
+            if (appointment == null)
+                throw new InvalidOperationException(
+                    "No fue posible crear la cita.");
 
             return new AppointmentModel.Response(
                 appointment.Id,

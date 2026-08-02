@@ -1,5 +1,6 @@
 ﻿using Dsw2026Tpi.Domain.Entities;
 using System.Linq.Expressions;
+using System.Data;
 
 namespace Dsw2026Tpi.Domain.Interfaces;
 
@@ -15,4 +16,7 @@ public interface IPersistence
     Task<T> Delete<T>(T entity) where T : EntityBase;
     Task<Pagination<T>> Paginate<T, TKey>(int pageSize, int pageIndex, Expression<Func<T, bool>> predicate, Expression<Func<T, TKey>> sortOrder, params string[] includes) where T : EntityBase;
     Task<List<DateOnly>> GetHolidays();
+    Task ExecuteInTransaction(
+    Func<Task> action,
+    IsolationLevel isolationLevel = IsolationLevel.Serializable);
 }

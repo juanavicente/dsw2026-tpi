@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using System.Text.Json;
 using System.Reflection;
+using System.Data;
 
 namespace Dsw2026Tpi.Data;
 
@@ -139,5 +140,25 @@ public class PersistenceEf : IPersistence
 
         return JsonSerializer.Deserialize<List<DateOnly>>(json)
                ?? new List<DateOnly>();
+    }
+
+    public async Task ExecuteInTransaction(
+    Func<Task> action,
+    IsolationLevel isolationLevel = IsolationLevel.Serializable)
+    {
+        await using var transaction =
+            await _context.Database.BeginTransactionAsync(isolationLevel);
+
+        try
+        {
+            await action();
+
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
     }
 }
