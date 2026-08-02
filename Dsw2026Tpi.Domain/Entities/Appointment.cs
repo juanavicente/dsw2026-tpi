@@ -43,14 +43,14 @@ public class Appointment : EntityBase
         PatientId = patientId;
         Reason = reason.Trim();
 
-        Status = AppointmentStatus.Confirmed;
+        Status = AppointmentStatus.Booked;
     }
 
     public void Cancel(DateOnly cancellationDate)
     {
-        if (Status != AppointmentStatus.Confirmed)
+        if (Status != AppointmentStatus.Booked)
             throw new ArgumentException(
-                "Solo una cita confirmada puede cancelarse.");
+                "Solo una cita reservada puede cancelarse.");
 
         Status = AppointmentStatus.Cancelled;
         CancellationDate = cancellationDate;
@@ -59,11 +59,11 @@ public class Appointment : EntityBase
 
     public void Complete()
     {
-        if (Status != AppointmentStatus.Confirmed)
+        if (Status != AppointmentStatus.Booked)
             throw new ArgumentException(
-                "Solo una cita confirmada puede completarse.");
+                "Solo una cita reservada puede completarse.");
 
-        Status = AppointmentStatus.Completed;
+        Status = AppointmentStatus.Attended;
         UpdatedAt = DateTime.UtcNow;
     }
 

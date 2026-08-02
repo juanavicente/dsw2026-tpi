@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Dsw2026Tpi.Api.Controllers;
 
-[Route("apiappointments")]
+[Route("api/appointments")]
 [Authorize]
 public class AppointmentController : AppController
 {
@@ -19,31 +19,75 @@ public class AppointmentController : AppController
     }
 
     /// <summary>
-    /// Reserva un turno.
+    /// Reserva un turno médico.
     /// </summary>
     [HttpPost]
     [Authorize(Policy = Policies.PatientPolicy)]
     [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Create(
         [FromBody] AppointmentModel.Request request)
     {
         var appointment = await _service.Create(request);
 
-        return CreatedAtAction(
-            nameof(GetPatientAppointments),
-            new
-            {
-                dni = request.Patient.Dni
-            },
+        return StatusCode(
+            StatusCodes.Status201Created,
             appointment);
     }
 
     /// <summary>
-    /// Obtiene las citas activas del paciente.
+    /// Obtiene las citas de una fecha determinada.
+    /// </summary>
+    [HttpGet]
+    [Authorize(Policy = Policies.AdminPolicy)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetByDate(
+        [FromQuery] DateOnly date)
+    {
+        var appointments =
+            await _service.GetByDate(date);
+
+        return Ok(appointments);
+    }
+
+    /// <summary>
+    /// Realiza una búsqueda administrativa de citas
+    /// aplicando filtros opcionales y paginación.
+    /// </summary>
+    [HttpGet("search")]
+    [Authorize(Policy = Policies.AdminPolicy)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Search(
+        [FromQuery] int pageSize,
+        [FromQuery] int pageIndex,
+        [FromQuery] Guid? specialtyId = null,
+        [FromQuery] Guid? doctorId = null,
+        [FromQuery] long? dni = null,
+        [FromQuery] DateOnly? date = null)
+    {
+        var appointments = await _service.Search(
+            pageSize,
+            pageIndex,
+            specialtyId,
+            doctorId,
+            dni,
+            date);
+
+        return Ok(appointments);
+    }
+
+    /// <summary>
+    /// Obtiene las citas activas de un paciente.
     /// </summary>
     [HttpGet("patient")]
     [Authorize(Policy = Policies.PatientPolicy)]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetPatientAppointments(
         [FromQuery] long dni)
@@ -60,6 +104,7 @@ public class AppointmentController : AppController
     [HttpDelete("{id:guid}")]
     [Authorize(Policy = Policies.PatientPolicy)]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Cancel(Guid id)
     {

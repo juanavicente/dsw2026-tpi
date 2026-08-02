@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Dsw2026Tpi.Domain.Enums;
+﻿namespace Dsw2026Tpi.Domain.Enums;
 
 public enum AppointmentStatus
 {
-    Confirmed,
+    Booked,
     Cancelled,
-    Completed
+    Attended,
+    NoShow
 }

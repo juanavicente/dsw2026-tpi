@@ -12,6 +12,24 @@ public interface IAppointmentService
         AppointmentModel.Request request);
 
     /// <summary>
+    /// Obtiene las citas de una fecha determinada.
+    /// </summary>
+    Task<IEnumerable<AppointmentModel.SearchResponse>> GetByDate(
+        DateOnly date);
+
+    /// <summary>
+    /// Realiza una búsqueda administrativa de citas
+    /// aplicando filtros opcionales y paginación.
+    /// </summary>
+    Task<Pagination<AppointmentModel.SearchResponse>> Search(
+        int pageSize,
+        int pageIndex,
+        Guid? specialtyId = null,
+        Guid? doctorId = null,
+        long? dni = null,
+        DateOnly? date = null);
+
+    /// <summary>
     /// Obtiene los turnos activos de un paciente.
     /// </summary>
     Task<IEnumerable<AppointmentModel.PatientResponse>> GetPatientAppointments(
