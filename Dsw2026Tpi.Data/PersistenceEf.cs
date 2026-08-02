@@ -2,10 +2,12 @@
 using Dsw2026Tpi.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using System.Text.Json;
+using System.Reflection;
 
 namespace Dsw2026Tpi.Data;
 
-public class PersistenceEf: IPersistence
+public class PersistenceEf : IPersistence
 {
     private readonly Dsw2026TpiDbContext _context;
 
@@ -19,6 +21,12 @@ public class PersistenceEf: IPersistence
         await _context.AddAsync(entity);
         await _context.SaveChangesAsync();
         return entity;
+    }
+
+    public async Task AddRange<T>(IEnumerable<T> entities) where T : EntityBase
+    {
+        await _context.AddRangeAsync(entities);
+        await _context.SaveChangesAsync();
     }
 
     public async Task<T> Delete<T>(T entity) where T : EntityBase
@@ -35,29 +43,29 @@ public class PersistenceEf: IPersistence
     public async Task<T?> First<T>(Expression<Func<T, bool>> predicate, params string[] include) where T : EntityBase
     {
         return await Include(_context.Set<T>(), include)
-     .Where(e => !e.IsDeleted)
-     .FirstOrDefaultAsync(predicate);
+            .Where(e => !e.IsDeleted)
+            .FirstOrDefaultAsync(predicate);
     }
 
     public async Task<IEnumerable<T>?> GetAll<T>(params string[] include) where T : EntityBase
     {
         return await Include(_context.Set<T>(), include)
-     .Where(e => !e.IsDeleted)
-     .ToListAsync();
+            .Where(e => !e.IsDeleted)
+            .ToListAsync();
     }
 
     public async Task<T?> GetById<T>(Guid id, params string[] include) where T : EntityBase
     {
         return await Include(_context.Set<T>(), include)
-      .FirstOrDefaultAsync(e => e.Id == id && !e.IsDeleted);
+            .FirstOrDefaultAsync(e => e.Id == id && !e.IsDeleted);
     }
 
     public async Task<IEnumerable<T>?> GetFiltered<T>(Expression<Func<T, bool>> predicate, params string[] include) where T : EntityBase
     {
         return await Include(_context.Set<T>(), include)
-     .Where(e => !e.IsDeleted)
-     .Where(predicate)
-     .ToListAsync();
+            .Where(e => !e.IsDeleted)
+            .Where(predicate)
+            .ToListAsync();
     }
 
     public async Task<T> Update<T>(T entity) where T : EntityBase
@@ -67,38 +75,46 @@ public class PersistenceEf: IPersistence
         return entity;
     }
 
-    public async Task<Pagination<T>> Paginate<T, TKey>(int pageSize, int pageIndex, Expression<Func<T, bool>> predicate, Expression<Func<T, TKey>> sortOrder, params string[] includes) where T : EntityBase
+    public async Task<Pagination<T>> Paginate<T, TKey>(
+        int pageSize,
+        int pageIndex,
+        Expression<Func<T, bool>> predicate,
+        Expression<Func<T, TKey>> sortOrder,
+        params string[] includes) where T : EntityBase
     {
         pageSize = Math.Abs(pageSize);
         pageIndex = Math.Abs(pageIndex) == 0 ? 0 : Math.Abs(pageIndex) - 1;
 
         var filtered = Include(_context.Set<T>(), includes)
-          .Where(e => !e.IsDeleted)
-          .Where(predicate)
-          .OrderBy(sortOrder);
+            .Where(e => !e.IsDeleted)
+            .Where(predicate)
+            .OrderBy(sortOrder);
 
         var total = await filtered.CountAsync();
 
-        
         async Task<Pagination<T>> GetPage(int skip, int take)
         {
             var data = await filtered.Skip(skip)
-                    .Take(take)
-                    .ToListAsync();
+                .Take(take)
+                .ToListAsync();
 
             return new Pagination<T>(pageSize, pageIndex, total, data);
         }
-        
-        //la pagina existe
+
+        // La página existe
         if (total > pageSize * pageIndex)
         {
             return await GetPage(pageIndex * pageSize, pageSize);
         }
 
-        //solo hay una pagina
+        // Solo hay una página
         if (total < pageSize)
         {
-            return new Pagination<T>(pageSize, pageIndex, total, await filtered.ToListAsync());
+            return new Pagination<T>(
+                pageSize,
+                pageIndex,
+                total,
+                await filtered.ToListAsync());
         }
 
         var targetPageIndex = pageIndex - 1;
@@ -112,11 +128,14 @@ public class PersistenceEf: IPersistence
 
             targetPageIndex--;
 
-            if (targetPageIndex < 0) return new Pagination<T>(pageSize, 0, 0, []);
+            if (targetPageIndex < 0)
+                return new Pagination<T>(pageSize, 0, 0, []);
         }
     }
 
-    private static IQueryable<T> Include<T>(IQueryable<T> query, string[] includes) where T : EntityBase
+    private static IQueryable<T> Include<T>(
+        IQueryable<T> query,
+        string[] includes) where T : EntityBase
     {
         var includedQuery = query;
 
@@ -124,6 +143,23 @@ public class PersistenceEf: IPersistence
         {
             includedQuery = includedQuery.Include(include);
         }
+
         return includedQuery;
+    }
+
+    public async Task<List<DateOnly>> GetHolidays()
+    {
+        var path = Path.Combine(
+            Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!,
+            "Sources",
+            "holidays.json");
+
+        if (!File.Exists(path))
+            return new List<DateOnly>();
+
+        var json = await File.ReadAllTextAsync(path);
+
+        return JsonSerializer.Deserialize<List<DateOnly>>(json)
+               ?? new List<DateOnly>();
     }
 }
