@@ -38,9 +38,6 @@ public class SpecialityController : AppController
     {
         var speciality = await _service.GetById(id);
 
-        if (speciality == null)
-            return NotFound();
-
         return Ok(speciality);
     }
 

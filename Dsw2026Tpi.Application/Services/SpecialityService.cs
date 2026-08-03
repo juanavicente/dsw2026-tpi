@@ -48,7 +48,7 @@ public class SpecialityService : ISpecialityService
         var speciality = await _persistence.GetById<Speciality>(id);
 
         if (speciality == null)
-            return null;
+            throw new EntityNotFoundException("Speciality");
 
         return new SpecialityModel.Response(
             speciality.Id,
