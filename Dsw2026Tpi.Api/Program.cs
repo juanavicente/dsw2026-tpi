@@ -7,6 +7,7 @@ using Dsw2026Tpi.CrossCutting.Identity;
 using Microsoft.AspNetCore.Identity;
 using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.Application.Services;
+using Dsw2026Tpi.Data.Identity;
 
 namespace Dsw2026Tpi.Api;
 
@@ -33,23 +34,80 @@ public class Program
             builder.Services.AddApplicationPersistence(builder.Configuration);
             builder.Services.AddAppCors(builder.Configuration);
             builder.Services.AddAppDependencies();
-            builder.Services.AddControllers();
+            builder.Services.AddAppRateLimiting(builder.Configuration);
+            builder.Services
+            .AddControllers()
+            .ConfigureApiBehaviorOptions(options =>
+            {
+                options.InvalidModelStateResponseFactory = context =>
+                {
+                    var errorResponse = new Dsw2026Tpi.CrossCutting.Models.ErrorResponse(
+                        "VALIDATION_ERROR",
+                        "Uno o más datos de entrada no son válidos.");
+
+                    foreach (var entry in context.ModelState)
+                    {
+                        foreach (var error in entry.Value.Errors)
+                        {
+                            errorResponse.AddDetail(
+                                entry.Key,
+                                error.ErrorMessage);
+                        }
+                    }
+
+                    return new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(errorResponse);
+                };
+            });
             builder.Services.AddHealthChecks();
 
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())
             {
-                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+                var roleManager = scope.ServiceProvider
+                    .GetRequiredService<RoleManager<IdentityRole>>();
 
+                var userManager = scope.ServiceProvider
+                    .GetRequiredService<UserManager<ApplicationUser>>();
+
+                // Crear rol Administrador si no existe
                 if (!await roleManager.RoleExistsAsync(Roles.Administrator))
                 {
                     await roleManager.CreateAsync(new IdentityRole(Roles.Administrator));
                 }
 
+                // Crear rol Paciente si no existe
                 if (!await roleManager.RoleExistsAsync(Roles.Patient))
                 {
                     await roleManager.CreateAsync(new IdentityRole(Roles.Patient));
+                }
+
+                // Crear administrador inicial si no existe
+                const string adminEmail = "desarrollo@test.com";
+                const string adminPassword = "Admin123!";
+
+                var admin = await userManager.FindByEmailAsync(adminEmail);
+
+                if (admin is null)
+                {
+                    admin = new ApplicationUser
+                    {
+                        UserName = adminEmail,
+                        Email = adminEmail,
+                        EmailConfirmed = true,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+
+                    var result = await userManager.CreateAsync(admin, adminPassword);
+
+                    if (!result.Succeeded)
+                    {
+                        throw new Exception(
+                            string.Join(", ", result.Errors.Select(e => e.Description)));
+                    }
+
+                    await userManager.AddToRoleAsync(admin, Roles.Administrator);
                 }
             }
 
@@ -67,9 +125,11 @@ public class Program
 
             app.UseMiddleware<ExceptionHandlingMiddleware>();
 
+            app.UseRouting();
             app.UseCors();
             app.UseAuthentication();
             app.UseAuthorization();
+            app.UseRateLimiter();
 
             app.MapControllers();
             app.MapHealthChecks("/health-check");
@@ -94,4 +154,3 @@ public class Program
         }
     }
 }
-
