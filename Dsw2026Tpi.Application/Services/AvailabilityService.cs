@@ -127,6 +127,23 @@ public class AvailabilityService : IAvailabilityService
         if (doctor == null)
             throw new EntityNotFoundException("Doctor");
 
+        if (request.Days == null || !request.Days.Any())
+        {
+            throw new ValidationException(
+                "Debe indicar al menos un día de disponibilidad.",
+                nameof(ErrorCodes.VALIDATION_ERROR));
+        }
+
+        foreach (var day in request.Days)
+        {
+            if (day.StartTime >= day.EndTime)
+            {
+                throw new ValidationException(
+                    "La hora de inicio debe ser menor a la hora de fin.",
+                    nameof(ErrorCodes.VALIDATION_ERROR));
+            }
+        }
+
         var today = DateOnly.FromDateTime(DateTime.Today);
 
         var availabilities = await _persistence.GetFiltered<Availability>(
@@ -201,7 +218,30 @@ public class AvailabilityService : IAvailabilityService
             {
                 var turns = GenerateTurns(availability, date);
 
-                await _persistence.AddRange(turns);
+                var turnsToCreate = new List<Turn>();
+
+                foreach (var turn in turns)
+                {
+                    var existingReservedTurn = await _persistence.First<Turn>(
+                        t =>
+                            t.Date == turn.Date &&
+                            t.StartTime == turn.StartTime &&
+                            t.EndTime == turn.EndTime &&
+                            t.Status == TurnStatus.Reserved &&
+                            t.Availability != null &&
+                            t.Availability.DoctorId == request.DoctorId,
+                        nameof(Turn.Availability));
+
+                    if (existingReservedTurn == null)
+                    {
+                        turnsToCreate.Add(turn);
+                    }
+                }
+
+                if (turnsToCreate.Count > 0)
+                {
+                    await _persistence.AddRange(turnsToCreate);
+                }
             }
         }
 
