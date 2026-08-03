@@ -8,6 +8,7 @@ using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.CrossCutting.Resources;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
+using Dsw2026Tpi.Domain.Enums;
 
 
 namespace Dsw2026Tpi.Application.Services;
@@ -74,9 +75,30 @@ public class AvailabilityService : IAvailabilityService
                 {
                     var turns = GenerateTurns(availability, date);
 
-                    Console.WriteLine($"Fecha: {date} - Turnos generados: {turns.Count}");
+                    var turnsToCreate = new List<Turn>();
 
-                    await _persistence.AddRange(turns);
+                    foreach (var turn in turns)
+                    {
+                        var existingReservedTurn = await _persistence.First<Turn>(
+                            t =>
+                                t.Date == turn.Date &&
+                                t.StartTime == turn.StartTime &&
+                                t.EndTime == turn.EndTime &&
+                                t.Status == TurnStatus.Reserved &&
+                                t.Availability != null &&
+                                t.Availability.DoctorId == request.DoctorId,
+                            nameof(Turn.Availability));
+
+                        if (existingReservedTurn == null)
+                        {
+                            turnsToCreate.Add(turn);
+                        }
+                    }
+
+                    if (turnsToCreate.Count > 0)
+                    {
+                        await _persistence.AddRange(turnsToCreate);
+                    }
                 }
             }
 
@@ -100,20 +122,104 @@ public class AvailabilityService : IAvailabilityService
     public async Task<AvailabilityModel.Response> Update(
      AvailabilityModel.Request request)
     {
+        var doctor = await _persistence.GetById<Doctor>(request.DoctorId);
+
+        if (doctor == null)
+            throw new EntityNotFoundException("Doctor");
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+
         var availabilities = await _persistence.GetFiltered<Availability>(
             a => a.DoctorId == request.DoctorId &&
-                 a.Year == DateTime.Today.Year &&
-                 a.Month == DateTime.Today.Month);
+                 a.Year == today.Year &&
+                 a.Month == today.Month);
 
         if (availabilities != null)
         {
             foreach (var availability in availabilities)
             {
-                await _persistence.Delete(availability);
+                var turns = await _persistence.GetFiltered<Turn>(
+                    t => t.AvailabilityId == availability.Id);
+
+                var hasTurnsToKeep = false;
+
+                if (turns != null)
+                {
+                    foreach (var turn in turns)
+                    {
+                        // Solo sobrescribimos turnos futuros NO reservados
+                        if (turn.Date >= today &&
+                            turn.Status == TurnStatus.Available)
+                        {
+                            await _persistence.Delete(turn);
+                        }
+                        else
+                        {
+                            // Reservados, bloqueados o pasados se conservan
+                            hasTurnsToKeep = true;
+                        }
+                    }
+                }
+
+                // La disponibilidad vieja solo se elimina si
+                // no quedaron turnos que debamos conservar.
+                if (!hasTurnsToKeep)
+                {
+                    await _persistence.Delete(availability);
+                }
             }
         }
 
-        return await Create(request);
+        Availability? lastAvailability = null;
+
+        foreach (var day in request.Days)
+        {
+            if (day.StartTime >= day.EndTime)
+            {
+                throw new ValidationException(
+                    "La hora de inicio debe ser menor a la hora de fin.",
+                    nameof(ErrorCodes.VALIDATION_ERROR));
+            }
+
+            var availability = new Availability(
+                today.Year,
+                today.Month,
+                day.Day,
+                day.StartTime,
+                day.EndTime,
+                request.DoctorId);
+
+            lastAvailability = await _persistence.Add(availability);
+
+            var holidays = await _persistence.GetHolidays();
+
+            var dates = GetDatesForMonth(day.Day)
+                .Where(date => !holidays.Contains(date))
+                .ToList();
+
+            foreach (var date in dates)
+            {
+                var turns = GenerateTurns(availability, date);
+
+                await _persistence.AddRange(turns);
+            }
+        }
+
+        if (lastAvailability == null)
+        {
+            throw new ValidationException(
+                "Debe indicar al menos un día de disponibilidad.",
+                nameof(ErrorCodes.VALIDATION_ERROR));
+        }
+
+        return new AvailabilityModel.Response(
+            lastAvailability.Id,
+            lastAvailability.DoctorId,
+            lastAvailability.Year,
+            lastAvailability.Month,
+            lastAvailability.DayOfWeek,
+            lastAvailability.StartTime,
+            lastAvailability.EndTime);
     }
 
     private List<DateOnly> GetDatesForMonth(DayOfWeek dayOfWeek)
