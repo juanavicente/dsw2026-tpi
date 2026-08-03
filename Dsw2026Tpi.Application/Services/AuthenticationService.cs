@@ -101,20 +101,41 @@ public class AuthenticationService : IAuthenticationService
 
             await _persistence.Add(patient);
 
-            var user = new ApplicationUser
+            var user = await _userManager.FindByEmailAsync(request.Email);
+
+            if (user is null)
             {
-                UserName = request.Email,
-                Email = request.Email,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+                user = new ApplicationUser
+                {
+                    UserName = request.Email,
+                    Email = request.Email,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
 
-            var result = await _userManager.CreateAsync(user);
+                var result = await _userManager.CreateAsync(user);
 
-            if (!result.Succeeded)
-                throw new AuthenticationException();
+                if (!result.Succeeded)
+                {
+                    throw new ConflictException(
+                        nameof(ErrorCodes.REGISTER_USER_CONFLICT),
+                        ErrorCodes.REGISTER_USER_CONFLICT)
+                        .WithDetail(result.Errors.Select(e => (e.Code, e.Description)));
+                }
+            }
 
-            await _userManager.AddToRoleAsync(user, Roles.Patient);
+            if (!await _userManager.IsInRoleAsync(user, Roles.Patient))
+            {
+                var roleResult = await _userManager.AddToRoleAsync(user, Roles.Patient);
+
+                if (!roleResult.Succeeded)
+                {
+                    throw new ConflictException(
+                        nameof(ErrorCodes.REGISTER_USER_CONFLICT),
+                        ErrorCodes.REGISTER_USER_CONFLICT)
+                        .WithDetail(roleResult.Errors.Select(e => (e.Code, e.Description)));
+                }
+            }
         }
 
         var identityUser = await _userManager.FindByEmailAsync(request.Email)

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-using Dsw2026Tpi.Domain.Entities;
+﻿using Dsw2026Tpi.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -13,5 +9,12 @@ public class TurnConfiguration : IEntityTypeConfiguration<Turn>
     public void Configure(EntityTypeBuilder<Turn> builder)
     {
         builder.ToTable("Turns");
+
+        builder.HasKey(t => t.Id);
+
+        builder.HasOne(t => t.Availability)
+            .WithMany(a => a.Turns)
+            .HasForeignKey(t => t.AvailabilityId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
