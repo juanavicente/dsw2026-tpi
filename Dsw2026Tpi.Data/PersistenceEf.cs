@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using System.Text.Json;
 using System.Reflection;
+using System.Data;
 
 namespace Dsw2026Tpi.Data;
 
@@ -76,14 +77,21 @@ public class PersistenceEf : IPersistence
     }
 
     public async Task<Pagination<T>> Paginate<T, TKey>(
-        int pageSize,
-        int pageIndex,
-        Expression<Func<T, bool>> predicate,
-        Expression<Func<T, TKey>> sortOrder,
-        params string[] includes) where T : EntityBase
+    int pageSize,
+    int pageIndex,
+    Expression<Func<T, bool>> predicate,
+    Expression<Func<T, TKey>> sortOrder,
+    params string[] includes) where T : EntityBase
     {
-        pageSize = Math.Abs(pageSize);
-        pageIndex = Math.Abs(pageIndex) == 0 ? 0 : Math.Abs(pageIndex) - 1;
+        if (pageSize <= 0)
+            throw new ArgumentException(
+                "El tamaño de página debe ser mayor a cero.",
+                nameof(pageSize));
+
+        if (pageIndex < 0)
+            throw new ArgumentException(
+                "El índice de página no puede ser negativo.",
+                nameof(pageIndex));
 
         var filtered = Include(_context.Set<T>(), includes)
             .Where(e => !e.IsDeleted)
@@ -92,45 +100,16 @@ public class PersistenceEf : IPersistence
 
         var total = await filtered.CountAsync();
 
-        async Task<Pagination<T>> GetPage(int skip, int take)
-        {
-            var data = await filtered.Skip(skip)
-                .Take(take)
-                .ToListAsync();
+        var data = await filtered
+            .Skip(pageIndex * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
 
-            return new Pagination<T>(pageSize, pageIndex, total, data);
-        }
-
-        // La página existe
-        if (total > pageSize * pageIndex)
-        {
-            return await GetPage(pageIndex * pageSize, pageSize);
-        }
-
-        // Solo hay una página
-        if (total < pageSize)
-        {
-            return new Pagination<T>(
-                pageSize,
-                pageIndex,
-                total,
-                await filtered.ToListAsync());
-        }
-
-        var targetPageIndex = pageIndex - 1;
-
-        while (true)
-        {
-            if (total > targetPageIndex * pageSize)
-            {
-                return await GetPage(targetPageIndex * pageSize, pageSize);
-            }
-
-            targetPageIndex--;
-
-            if (targetPageIndex < 0)
-                return new Pagination<T>(pageSize, 0, 0, []);
-        }
+        return new Pagination<T>(
+            pageSize,
+            pageIndex,
+            total,
+            data);
     }
 
     private static IQueryable<T> Include<T>(
@@ -161,5 +140,25 @@ public class PersistenceEf : IPersistence
 
         return JsonSerializer.Deserialize<List<DateOnly>>(json)
                ?? new List<DateOnly>();
+    }
+
+    public async Task ExecuteInTransaction(
+    Func<Task> action,
+    IsolationLevel isolationLevel = IsolationLevel.Serializable)
+    {
+        await using var transaction =
+            await _context.Database.BeginTransactionAsync(isolationLevel);
+
+        try
+        {
+            await action();
+
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
     }
 }
