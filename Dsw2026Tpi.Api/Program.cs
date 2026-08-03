@@ -103,6 +103,7 @@ public class Program
 
             app.UseMiddleware<ExceptionHandlingMiddleware>();
 
+            app.UseRouting();
             app.UseCors();
             app.UseAuthentication();
             app.UseAuthorization();
