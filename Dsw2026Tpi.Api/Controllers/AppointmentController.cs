@@ -3,6 +3,8 @@ using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Dsw2026Tpi.Api.Configurations;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Dsw2026Tpi.Api.Controllers;
 
@@ -22,6 +24,7 @@ public class AppointmentController : AppController
     /// Reserva un turno médico.
     /// </summary>
     [HttpPost]
+    [EnableRateLimiting(RateLimitingConfiguration.AppointmentBookingPolicy)]
     [Authorize(Policy = Policies.PatientPolicy)]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -41,6 +44,7 @@ public class AppointmentController : AppController
     /// Obtiene las citas de una fecha determinada.
     /// </summary>
     [HttpGet]
+    [EnableRateLimiting(RateLimitingConfiguration.GeneralPolicy)]
     [Authorize(Policy = Policies.AdminPolicy)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -58,6 +62,7 @@ public class AppointmentController : AppController
     /// aplicando filtros opcionales y paginación.
     /// </summary>
     [HttpGet("search")]
+    [EnableRateLimiting(RateLimitingConfiguration.GeneralPolicy)]
     [Authorize(Policy = Policies.AdminPolicy)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -85,6 +90,7 @@ public class AppointmentController : AppController
     /// Obtiene las citas activas de un paciente.
     /// </summary>
     [HttpGet("patient")]
+    [EnableRateLimiting(RateLimitingConfiguration.GeneralPolicy)]
     [Authorize(Policy = Policies.PatientPolicy)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -102,6 +108,7 @@ public class AppointmentController : AppController
     /// Cancela una cita.
     /// </summary>
     [HttpDelete("{id:guid}")]
+    [EnableRateLimiting(RateLimitingConfiguration.GeneralPolicy)]
     [Authorize(Policy = Policies.PatientPolicy)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
