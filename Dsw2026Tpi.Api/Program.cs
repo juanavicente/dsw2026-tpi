@@ -35,7 +35,29 @@ public class Program
             builder.Services.AddAppCors(builder.Configuration);
             builder.Services.AddAppDependencies();
             builder.Services.AddAppRateLimiting(builder.Configuration);
-            builder.Services.AddControllers();
+            builder.Services
+            .AddControllers()
+            .ConfigureApiBehaviorOptions(options =>
+            {
+                options.InvalidModelStateResponseFactory = context =>
+                {
+                    var errorResponse = new Dsw2026Tpi.CrossCutting.Models.ErrorResponse(
+                        "VALIDATION_ERROR",
+                        "Uno o más datos de entrada no son válidos.");
+
+                    foreach (var entry in context.ModelState)
+                    {
+                        foreach (var error in entry.Value.Errors)
+                        {
+                            errorResponse.AddDetail(
+                                entry.Key,
+                                error.ErrorMessage);
+                        }
+                    }
+
+                    return new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(errorResponse);
+                };
+            });
             builder.Services.AddHealthChecks();
 
             var app = builder.Build();
@@ -132,4 +154,3 @@ public class Program
         }
     }
 }
-
