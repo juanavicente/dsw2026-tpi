@@ -13,5 +13,6 @@ public interface IAvailabilityService
 
     Task<AvailabilityModel.Response> Update(
         AvailabilityModel.Request request);
+    Task<IEnumerable<AvailabilityModel.DoctorAvailabilityResponse>> GetByDoctor(Guid doctorId);
 }
 

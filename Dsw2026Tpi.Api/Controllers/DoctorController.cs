@@ -1,4 +1,6 @@
 ﻿using Dsw2026Tpi.Application.Dtos;
+using Dsw2026Tpi.Api.Configurations;
+using Microsoft.AspNetCore.RateLimiting;
 using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Identity;
 using Microsoft.AspNetCore.Authorization;
@@ -8,13 +10,17 @@ namespace Dsw2026Tpi.Api.Controllers;
 
 [Route("api/doctors")]
 [Authorize(Policy = Policies.AdminPolicy)]
+[EnableRateLimiting(RateLimitingConfiguration.GeneralPolicy)]
 public class DoctorController : AppController
 {
     private readonly IDoctorService _service;
-
-    public DoctorController(IDoctorService service)
+    private readonly IAvailabilityService _availabilityService;
+    public DoctorController(
+    IDoctorService service,
+    IAvailabilityService availabilityService)
     {
         _service = service;
+        _availabilityService = availabilityService;
     }
 
     [HttpGet]
@@ -39,6 +45,16 @@ public class DoctorController : AppController
             return NotFound();
 
         return Ok(doctor);
+    }
+
+    [HttpGet("{id:guid}/availabilities")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetAvailabilities(Guid id)
+    {
+        var availabilities = await _availabilityService.GetByDoctor(id);
+
+        return Ok(availabilities);
     }
 
     [HttpPost]
@@ -66,11 +82,11 @@ public class DoctorController : AppController
     }
 
     [HttpDelete("{id:guid}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _service.Delete(id);
 
-        return NoContent();
+        return Ok ("ok");
     }
 }

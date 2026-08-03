@@ -23,10 +23,6 @@ public static class PersistenceConfigurationExtensions
         services.AddDbContext<AuthenticationDbContext>(options =>
         {
             options.UseSqlServer(connectionString);
-            options.UseSeeding((c, t) =>
-            {
-                c.Seedwork<IdentityRole>("Sources\\roles.json");
-            });
         });
         return services;
     }

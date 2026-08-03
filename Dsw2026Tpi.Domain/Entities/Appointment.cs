@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-using Dsw2026Tpi.Domain.Enums;
+﻿using Dsw2026Tpi.Domain.Enums;
 
 namespace Dsw2026Tpi.Domain.Entities;
 
 public class Appointment : EntityBase
 {
     public DateOnly AppointmentDate { get; private set; }
+
     public DateOnly? CancellationDate { get; private set; }
+
+    public string Reason { get; private set; }
 
     public AppointmentStatus Status { get; private set; }
 
@@ -20,33 +19,69 @@ public class Appointment : EntityBase
     public Patient? Patient { get; private set; }
 
     #region Constructor for EF
+
 #pragma warning disable CS8618
     private Appointment()
     {
     }
 #pragma warning restore CS8618
+
     #endregion
 
     public Appointment(
         DateOnly appointmentDate,
         Guid turnId,
         Guid patientId,
-        Guid? id = null) : base(id)
+        string reason,
+        Guid? id = null)
+        : base(id)
     {
+        Validate(reason);
+
         AppointmentDate = appointmentDate;
         TurnId = turnId;
         PatientId = patientId;
-        Status = AppointmentStatus.Confirmed;
+        Reason = reason.Trim();
+
+        Status = AppointmentStatus.Booked;
     }
 
     public void Cancel(DateOnly cancellationDate)
     {
+        if (Status != AppointmentStatus.Booked)
+            throw new ArgumentException(
+                "Solo una cita reservada puede cancelarse.");
+
         Status = AppointmentStatus.Cancelled;
         CancellationDate = cancellationDate;
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public void Complete()
     {
-        Status = AppointmentStatus.Completed;
+        if (Status != AppointmentStatus.Booked)
+            throw new ArgumentException(
+                "Solo una cita reservada puede completarse.");
+
+        Status = AppointmentStatus.Attended;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    private static void Validate(string reason)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new ArgumentException(
+                "El motivo es obligatorio.",
+                nameof(reason));
+
+        if (reason.Trim().Length < 5)
+            throw new ArgumentException(
+                "El motivo debe tener al menos 5 caracteres.",
+                nameof(reason));
+
+        if (reason.Trim().Length > 250)
+            throw new ArgumentException(
+                "El motivo no puede superar los 250 caracteres.",
+                nameof(reason));
     }
 }

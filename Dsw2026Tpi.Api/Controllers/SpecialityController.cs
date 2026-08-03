@@ -1,13 +1,16 @@
-﻿using Dsw2026Tpi.Application.Dtos;
+﻿using Dsw2026Tpi.Api.Configurations;
+using Dsw2026Tpi.Application.Dtos;
 using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Dsw2026Tpi.Api.Controllers;
 
 [Route("api/specialties")]
 [Authorize(Policy = Policies.AdminPolicy)]
+[EnableRateLimiting(RateLimitingConfiguration.GeneralPolicy)]
 public class SpecialityController : AppController
 {
     private readonly ISpecialityService _service;
@@ -66,11 +69,11 @@ public class SpecialityController : AppController
     }
 
     [HttpDelete("{id:guid}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _service.Delete(id);
 
-        return NoContent();
+        return Ok("ok");
     }
 }

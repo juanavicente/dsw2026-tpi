@@ -4,6 +4,7 @@ using Dsw2026Tpi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Dsw2026Tpi.Data.Migrations
 {
     [DbContext(typeof(Dsw2026TpiDbContext))]
-    partial class Dsw2026TpiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260802212421_SpecialitySoftDeleteIndex")]
+    partial class SpecialitySoftDeleteIndex
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -43,11 +46,6 @@ namespace Dsw2026Tpi.Data.Migrations
                     b.Property<Guid>("PatientId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
-
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -60,8 +58,6 @@ namespace Dsw2026Tpi.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("PatientId");
-
-                    b.HasIndex("Status");
 
                     b.HasIndex("TurnId");
 
@@ -258,13 +254,13 @@ namespace Dsw2026Tpi.Data.Migrations
                     b.HasOne("Dsw2026Tpi.Domain.Entities.Patient", "Patient")
                         .WithMany()
                         .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Dsw2026Tpi.Domain.Entities.Turn", "Turn")
                         .WithMany()
                         .HasForeignKey("TurnId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Patient");
@@ -298,7 +294,7 @@ namespace Dsw2026Tpi.Data.Migrations
                     b.HasOne("Dsw2026Tpi.Domain.Entities.Availability", "Availability")
                         .WithMany("Turns")
                         .HasForeignKey("AvailabilityId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Availability");
