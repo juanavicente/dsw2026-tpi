@@ -23,4 +23,10 @@ public record AvailabilityModel
         DayOfWeek Day,
         TimeOnly StartTime,
         TimeOnly EndTime);
+
+    public record DoctorAvailabilityResponse(
+        Guid Id,
+        string Day,
+        string StartTime,
+        string EndTime);
 }

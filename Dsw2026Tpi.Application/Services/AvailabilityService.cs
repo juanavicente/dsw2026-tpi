@@ -116,6 +116,27 @@ public class AvailabilityService : IAvailabilityService
         return await Create(request);
     }
 
+    public async Task<IEnumerable<AvailabilityModel.DoctorAvailabilityResponse>> GetByDoctor(Guid doctorId)
+    {
+        var doctor = await _persistence.GetById<Doctor>(doctorId);
+
+        if (doctor == null)
+            throw new EntityNotFoundException("Doctor");
+
+        var availabilities = await _persistence.GetFiltered<Availability>(
+            a => a.DoctorId == doctorId &&
+                 a.Year == DateTime.Today.Year &&
+                 a.Month == DateTime.Today.Month);
+
+        return availabilities.Select(a =>
+            new AvailabilityModel.DoctorAvailabilityResponse(
+                a.Id,
+                a.DayOfWeek.ToString(),
+                a.StartTime.ToString("HH:mm"),
+                a.EndTime.ToString("HH:mm")
+            ));
+    }
+
     private List<DateOnly> GetDatesForMonth(DayOfWeek dayOfWeek)
     {
         var dates = new List<DateOnly>();
