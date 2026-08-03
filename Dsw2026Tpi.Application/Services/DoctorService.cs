@@ -54,7 +54,7 @@ public class DoctorService : IDoctorService
             nameof(Doctor.Speciality));
 
         if (doctor == null)
-            return null;
+            throw new EntityNotFoundException("Doctor");
 
         return new DoctorModel.Response(
             doctor.Id,
@@ -64,7 +64,6 @@ public class DoctorService : IDoctorService
                 doctor.Speciality!.Id,
                 doctor.Speciality.Name));
     }
-
     public async Task<DoctorModel.Response> Create(
         DoctorModel.Request request)
     {

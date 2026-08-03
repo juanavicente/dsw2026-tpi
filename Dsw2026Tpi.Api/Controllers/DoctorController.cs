@@ -41,9 +41,6 @@ public class DoctorController : AppController
     {
         var doctor = await _service.GetById(id);
 
-        if (doctor == null)
-            return NotFound();
-
         return Ok(doctor);
     }
 
