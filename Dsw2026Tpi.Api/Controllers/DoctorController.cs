@@ -1,4 +1,6 @@
 ﻿using Dsw2026Tpi.Application.Dtos;
+using Dsw2026Tpi.Api.Configurations;
+using Microsoft.AspNetCore.RateLimiting;
 using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Identity;
 using Microsoft.AspNetCore.Authorization;
@@ -8,6 +10,7 @@ namespace Dsw2026Tpi.Api.Controllers;
 
 [Route("api/doctors")]
 [Authorize(Policy = Policies.AdminPolicy)]
+[EnableRateLimiting(RateLimitingConfiguration.GeneralPolicy)]
 public class DoctorController : AppController
 {
     private readonly IDoctorService _service;

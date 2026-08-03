@@ -34,6 +34,7 @@ public class Program
             builder.Services.AddApplicationPersistence(builder.Configuration);
             builder.Services.AddAppCors(builder.Configuration);
             builder.Services.AddAppDependencies();
+            builder.Services.AddAppRateLimiting(builder.Configuration);
             builder.Services.AddControllers();
             builder.Services.AddHealthChecks();
 
@@ -105,6 +106,7 @@ public class Program
             app.UseCors();
             app.UseAuthentication();
             app.UseAuthorization();
+            app.UseRateLimiter();
 
             app.MapControllers();
             app.MapHealthChecks("/health-check");
