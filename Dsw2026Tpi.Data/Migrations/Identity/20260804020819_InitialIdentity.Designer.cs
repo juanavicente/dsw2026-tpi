@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Dsw2026Tpi.Data.Migrations.Identity
 {
     [DbContext(typeof(AuthenticationDbContext))]
-    [Migration("20260708173738_Initial_Model")]
-    partial class Initial_Model
+    [Migration("20260804020819_InitialIdentity")]
+    partial class InitialIdentity
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

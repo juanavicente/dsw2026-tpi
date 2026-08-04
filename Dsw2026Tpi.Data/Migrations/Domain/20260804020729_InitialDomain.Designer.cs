@@ -9,11 +9,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace Dsw2026Tpi.Data.Migrations
+namespace Dsw2026Tpi.Data.Migrations.Domain
 {
     [DbContext(typeof(Dsw2026TpiDbContext))]
-    [Migration("20260731215255_AddAvailability")]
-    partial class AddAvailability
+    [Migration("20260804020729_InitialDomain")]
+    partial class InitialDomain
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -46,6 +46,11 @@ namespace Dsw2026Tpi.Data.Migrations
                     b.Property<Guid>("PatientId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -58,6 +63,8 @@ namespace Dsw2026Tpi.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("PatientId");
+
+                    b.HasIndex("Status");
 
                     b.HasIndex("TurnId");
 
@@ -121,11 +128,13 @@ namespace Dsw2026Tpi.Data.Migrations
 
                     b.Property<string>("LicenseNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<Guid?>("SpecialityId")
                         .HasColumnType("uniqueidentifier");
@@ -204,7 +213,8 @@ namespace Dsw2026Tpi.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[IsDeleted]=0");
 
                     b.ToTable("Specialities", (string)null);
                 });
@@ -251,13 +261,13 @@ namespace Dsw2026Tpi.Data.Migrations
                     b.HasOne("Dsw2026Tpi.Domain.Entities.Patient", "Patient")
                         .WithMany()
                         .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Dsw2026Tpi.Domain.Entities.Turn", "Turn")
                         .WithMany()
                         .HasForeignKey("TurnId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Patient");
@@ -280,7 +290,8 @@ namespace Dsw2026Tpi.Data.Migrations
                 {
                     b.HasOne("Dsw2026Tpi.Domain.Entities.Speciality", "Speciality")
                         .WithMany()
-                        .HasForeignKey("SpecialityId");
+                        .HasForeignKey("SpecialityId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Speciality");
                 });
@@ -290,7 +301,7 @@ namespace Dsw2026Tpi.Data.Migrations
                     b.HasOne("Dsw2026Tpi.Domain.Entities.Availability", "Availability")
                         .WithMany("Turns")
                         .HasForeignKey("AvailabilityId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Availability");

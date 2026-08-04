@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Dsw2026Tpi.Data.Migrations
+namespace Dsw2026Tpi.Data.Migrations.Domain
 {
     /// <inheritdoc />
-    public partial class AddAvailability : Migration
+    public partial class InitialDomain : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -50,8 +50,8 @@ namespace Dsw2026Tpi.Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    LicenseNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    LicenseNumber = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     SpecialityId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -65,7 +65,8 @@ namespace Dsw2026Tpi.Data.Migrations
                         name: "FK_Doctors_Specialities_SpecialityId",
                         column: x => x.SpecialityId,
                         principalTable: "Specialities",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -116,7 +117,7 @@ namespace Dsw2026Tpi.Data.Migrations
                         column: x => x.AvailabilityId,
                         principalTable: "Availabilities",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -126,6 +127,7 @@ namespace Dsw2026Tpi.Data.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     AppointmentDate = table.Column<DateOnly>(type: "date", nullable: false),
                     CancellationDate = table.Column<DateOnly>(type: "date", nullable: true),
+                    Reason = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false),
                     TurnId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     PatientId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -141,19 +143,24 @@ namespace Dsw2026Tpi.Data.Migrations
                         column: x => x.PatientId,
                         principalTable: "Patients",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Appointments_Turns_TurnId",
                         column: x => x.TurnId,
                         principalTable: "Turns",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Appointments_PatientId",
                 table: "Appointments",
                 column: "PatientId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Appointments_Status",
+                table: "Appointments",
+                column: "Status");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Appointments_TurnId",
@@ -174,7 +181,8 @@ namespace Dsw2026Tpi.Data.Migrations
                 name: "IX_Specialities_Name",
                 table: "Specialities",
                 column: "Name",
-                unique: true);
+                unique: true,
+                filter: "[IsDeleted]=0");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Turns_AvailabilityId",
