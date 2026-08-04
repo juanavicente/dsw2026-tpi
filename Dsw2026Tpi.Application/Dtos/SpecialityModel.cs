@@ -3,7 +3,6 @@
 public record SpecialityModel
 {
     public record Request(string Name, string Description);
-
     public record Response(
         Guid Id,
         string Name,

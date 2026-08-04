@@ -16,8 +16,8 @@ public class DoctorController : AppController
     private readonly IDoctorService _service;
     private readonly IAvailabilityService _availabilityService;
     public DoctorController(
-    IDoctorService service,
-    IAvailabilityService availabilityService)
+        IDoctorService service,
+        IAvailabilityService availabilityService)
     {
         _service = service;
         _availabilityService = availabilityService;
@@ -84,6 +84,6 @@ public class DoctorController : AppController
     {
         await _service.Delete(id);
 
-        return Ok ("ok");
+        return Ok("ok");
     }
 }
