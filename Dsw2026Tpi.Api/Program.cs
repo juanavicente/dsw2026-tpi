@@ -1,12 +1,8 @@
 using Dsw2026Tpi.Api.Configurations;
 using Dsw2026Tpi.Api.Middlewares;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Serilog;
 using Dsw2026Tpi.CrossCutting.Identity;
 using Microsoft.AspNetCore.Identity;
-using Dsw2026Tpi.Application.Interfaces;
-using Dsw2026Tpi.Application.Services;
 using Dsw2026Tpi.Data.Identity;
 
 namespace Dsw2026Tpi.Api;
@@ -83,8 +79,15 @@ public class Program
                 }
 
                 // Crear administrador inicial si no existe
-                const string adminEmail = "desarrollo@test.com";
-                const string adminPassword = "Admin123!";
+                var adminEmail = builder.Configuration["AdminSeed:Email"];
+                var adminPassword = builder.Configuration["AdminSeed:Password"];
+
+                if (string.IsNullOrWhiteSpace(adminEmail) ||
+                    string.IsNullOrWhiteSpace(adminPassword))
+                {
+                    throw new InvalidOperationException(
+                        "No se configuraron las credenciales del administrador inicial.");
+                }
 
                 var admin = await userManager.FindByEmailAsync(adminEmail);
 

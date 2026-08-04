@@ -4,7 +4,7 @@ using Dsw2026Tpi.Domain.Entities;
 
 namespace Dsw2026Tpi.Data;
 
-public class Dsw2026TpiDbContext: DbContext
+public class Dsw2026TpiDbContext : DbContext
 {
     public DbSet<Doctor> Doctors => Set<Doctor>();
     public DbSet<Speciality> Specialities => Set<Speciality>();
@@ -16,7 +16,6 @@ public class Dsw2026TpiDbContext: DbContext
         base(options)
     {
     }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Dsw2026Tpi.Api.Controllers;
 
 [Route("api/doctors")]
+[Tags("03 - Doctor")]
 [Authorize(Policy = Policies.AdminPolicy)]
 [EnableRateLimiting(RateLimitingConfiguration.GeneralPolicy)]
 public class DoctorController : AppController
@@ -16,8 +17,8 @@ public class DoctorController : AppController
     private readonly IDoctorService _service;
     private readonly IAvailabilityService _availabilityService;
     public DoctorController(
-    IDoctorService service,
-    IAvailabilityService availabilityService)
+        IDoctorService service,
+        IAvailabilityService availabilityService)
     {
         _service = service;
         _availabilityService = availabilityService;
@@ -84,6 +85,6 @@ public class DoctorController : AppController
     {
         await _service.Delete(id);
 
-        return Ok ("ok");
+        return Ok("ok");
     }
 }

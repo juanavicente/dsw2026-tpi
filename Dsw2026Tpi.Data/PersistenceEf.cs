@@ -77,11 +77,11 @@ public class PersistenceEf : IPersistence
     }
 
     public async Task<Pagination<T>> Paginate<T, TKey>(
-    int pageSize,
-    int pageIndex,
-    Expression<Func<T, bool>> predicate,
-    Expression<Func<T, TKey>> sortOrder,
-    params string[] includes) where T : EntityBase
+        int pageSize,
+        int pageIndex,
+        Expression<Func<T, bool>> predicate,
+        Expression<Func<T, TKey>> sortOrder,
+        params string[] includes) where T : EntityBase
     {
         if (pageSize <= 0)
             throw new ArgumentException(

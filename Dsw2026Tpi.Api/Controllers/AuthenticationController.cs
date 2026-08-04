@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Dsw2026Tpi.Api.Controllers;
 
 [Route("api/auth")]
+[Tags("01 - Authentication")]
 public class AuthenticationController : AppController
 {
     private readonly IAuthenticationService _authenticationService;
@@ -20,7 +21,7 @@ public class AuthenticationController : AppController
     [EnableRateLimiting(RateLimitingConfiguration.AdminLoginPolicy)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Login([FromBody] LoginAdminModel.Request request)
+    public async Task<IActionResult> LoginAdmin([FromBody] LoginAdminModel.Request request)
     {
         var result = await _authenticationService.LoginAdmin(request);
         return Ok(result);

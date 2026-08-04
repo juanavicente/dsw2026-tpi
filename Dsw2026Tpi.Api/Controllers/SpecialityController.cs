@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace Dsw2026Tpi.Api.Controllers;
 
 [Route("api/specialties")]
+[Tags("02 - Speciality")]
 [Authorize(Policy = Policies.AdminPolicy)]
 [EnableRateLimiting(RateLimitingConfiguration.GeneralPolicy)]
 public class SpecialityController : AppController
