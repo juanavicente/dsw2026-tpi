@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Dsw2026Tpi.Api.Controllers;
 
 [Route("api/doctors")]
+[Tags("03 - Doctor")]
 [Authorize(Policy = Policies.AdminPolicy)]
 [EnableRateLimiting(RateLimitingConfiguration.GeneralPolicy)]
 public class DoctorController : AppController

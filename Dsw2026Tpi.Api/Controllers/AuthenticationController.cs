@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Dsw2026Tpi.Api.Controllers;
 
 [Route("api/auth")]
+[Tags("01 - Authentication")]
 public class AuthenticationController : AppController
 {
     private readonly IAuthenticationService _authenticationService;

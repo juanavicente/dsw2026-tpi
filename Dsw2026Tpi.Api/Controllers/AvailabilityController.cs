@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Dsw2026Tpi.Api.Controllers;
 
 [Route("api/availabilities")]
+[Tags("04 - Availability")]
 [Authorize(Policy = Policies.AdminPolicy)]
 [EnableRateLimiting(RateLimitingConfiguration.GeneralPolicy)]
 public class AvailabilityController : AppController
